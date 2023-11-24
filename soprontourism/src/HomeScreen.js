@@ -181,7 +181,13 @@ function HomeScreen() {
               <p>{movie}</p>
             )
           })}
-          
+          <a
+          href="http://localhost:3001/Home"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Go to App 2
+        </a>
       </div>
     </div>
   );
