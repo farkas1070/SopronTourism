@@ -5,18 +5,15 @@ import { useNavigate } from "react-router-dom";
 import Nav from "./Nav";
 import { db } from "./firebase-config";
 import { collection, getDocs,doc, updateDoc ,getDoc} from "firebase/firestore";
+import Map from "./Map";
 function HomeScreen() {
   const [seatsData, setSeatsData] = useState([]);
   const [numberOfPeople, setNumberOfPeople] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
   const [showResults, setShowResults] = useState([]);
-  const [data, setData] = useState([]);
-  const navigate = useNavigate();
-  const handleNavigateClick = () => navigate("/Weather");
-  const handleNavigateClick2 = () => navigate("/");
   const [date, setDate] = useState("");
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState(null);
+  const [cinemas, setCinemas] = useState([]);
 
   const parameterMapping = {
     date: "Date",
@@ -57,6 +54,44 @@ function HomeScreen() {
 
   const handleNumberOfPeopleChange = (e) => {
     setNumberOfPeople(e.target.value);
+  };
+  const fetchData2 = async () => {
+    const response = await fetch("http://localhost:3123/api/longitude_and_latitude");
+    const responseData = await response.json();
+    console.log(responseData);
+  
+    // Assuming responseData is an array of objects with 'id', 'longitude', and 'latitude'
+    return responseData;
+  };
+  
+  const fetchCinemas = async () => {
+    const response = await fetch("http://localhost:3002/getCinemas");
+    const responseData = await response.json();
+    const filteredCinemas = responseData.filter((item) => item.city === city);
+    console.log(filteredCinemas);
+  
+    const longitudeAndLatitudeData = await fetchData2();
+    const combinedCinemas = filteredCinemas.map((cinema) => {
+      
+      
+      const matchingData = longitudeAndLatitudeData.find((data) => data.id.replace(/\s/g, '') === cinema.id);
+      console.log('Matching Data:', matchingData);
+
+      // If matching data is found, merge it into the cinema object
+      if (matchingData) {
+        return {
+          ...cinema,
+          longitude: matchingData.longitude,
+          latitude: matchingData.latitude,
+        };
+      }
+  
+      // If no matching data found, return the original cinema object
+      return cinema;
+    });
+  
+    setCinemas(combinedCinemas);
+    console.log(combinedCinemas);
   };
   const fetchMovies = async () => {
     try {
@@ -103,9 +138,10 @@ function HomeScreen() {
   };
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetchData();
-    fetchMovies();
     
+    fetchMovies();
+    fetchCinemas();
+    fetchData2();
   };
   
 
@@ -139,7 +175,7 @@ function HomeScreen() {
         </label>
           <button type="submit">Search Movies</button>
         </form>
-        
+        <Map cinemas={cinemas} movies={showResults}></Map>
         {weatherData && (
         <div>
           <h2>Weather for {city} on {date}:</h2>
@@ -165,29 +201,14 @@ function HomeScreen() {
               <p>{movie}</p>
             )
           })}
-          <a
-          href="http://localhost:3001/Home"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Go to App 2
-        </a>
+          
         </div>
       
       )}
-      movies you can watch:
-          {showResults.map((movie)=>{
-            return (
-              <p>{movie}</p>
-            )
-          })}
-          <a
-          href="http://localhost:3001/Home"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Go to App 2
-        </a>
+      
+     
+          
+
       </div>
     </div>
   );

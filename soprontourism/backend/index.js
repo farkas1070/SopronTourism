@@ -34,6 +34,19 @@ app.get('/getData', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+app.get('/getCinemas', async (req, res) => {
+  try {
+    const firestore = admin.firestore();
+    const data = await firestore.collection('Cinemas').get();
+
+    // Process the data as needed and send it as the response
+    const responseData = data.docs.map(doc => doc.data());
+    res.json(responseData);
+  } catch (error) {
+    console.error('Error getting data from Firestore', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 const port = process.env.PORT || 3002;
 
